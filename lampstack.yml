@@ -1,0 +1,42 @@
+---
+- hosts: dbserver 
+  tasks:
+  - name: Install apache
+    yum: name=httpd state=present
+  - name: Install mysql
+    yum: name=mysql-server state=present
+  - name: Start httpd 
+    service: name=httpd state=started
+  - name: start mysql
+    service: name=mysqld state=started
+    ignore_errors: yes
+  - name: Install python dependencies.
+    yum: name=python-lxml state=present
+  - name: Download artifacts from nexus
+    maven_artifact:
+     repository_url: http://unixtrainings.tk:8081/nexus/service/local/repositories/wscfg/content
+     group_id: com-wscfg
+     artifact_id: smusomi
+     version: 2.000.0-SNAPSHOT
+     dest: /tmp/index.html.jar
+     username: n
+     password: n
+  - name: Install unzip package
+    yum: name=unzip state=present
+  - name: extract the jar file"
+    unarchive:
+     src: /tmp/index.html.jar
+     dest: /var/www/html
+     remote_src: yes
+  - name: Configure iptables
+    lineinfile:
+     path: /etc/sysconfig/iptables
+     line: '-A INPUT -m state --state NEW -m tcp -p tcp --dport 80 -j ACCEPT'
+     insertafter: '-A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT'
+  - name: Remove the .jar file from the target server
+    shell: rm -rf /tmp/index.html.jar
+  - name: Retsart iptables
+    service: name=iptables state=restarted
+  - name: Start httpd
+    service: name=httpd state=restarted
+

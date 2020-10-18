@@ -1,0 +1,24 @@
+---
+- hosts: web
+  tasks:
+        - name: Add repo
+          yum_repository:
+                name: epel
+                description: EPEL YUM repo
+                baseurl: http://mirrors.sonic.net/epel/epel-release-latest-7.noarch.rpm
+        - name: Edit /etc/yum.repos.d/epel
+          command: echo "gpgcheck=0" >> /etc/yum.repos.d/epel.repo
+          notify: 
+                - yum-clean-metadata
+        - name: set default kernel
+          command: sed -i 's/^GRUB_DEFAULT=saved/GRUB_DEFAULT=0/ /etc/default/grub'
+
+  handlers:
+        - name: yum-clean-metadata
+          command: yum clean metadata
+
+
+#https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.6.6.tar.xz
+
+
+

@@ -1,0 +1,72 @@
+---
+- hosts: 
+  user: all
+  tasks:
+        - name: Add repositories
+          yum_repository: 
+                name: epel
+                description: EPEL YUM repo
+                baseurl: https://download.fedoraproject.org/pub/epel/$releasever/$basearch/
+                ignore_errors: yes
+        - name: Download kernel and extract
+          unarchive:
+                src: https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.6.5.tar.xz
+                dest: /root
+                remote_src: yes
+#        - name: Get into package
+#          command: chdir /
+        - name: Install dependencies
+          yum:
+                name: "{{ item }}"
+                state: present
+          with_items: 
+                - Development-Tools
+                - openssl*
+                - libncurses5-dev
+                - gcc*
+                - ncurses-devel
+                - elfutils-libelf-devel
+                - centos-release-scl
+                - devtoolset-7
+                - devtoolset-7-gcc*
+                - flex
+                - bison
+        - name: finding location of file
+          find:
+                paths: /root/linux*
+                patterns: linux* 
+                age: 1h
+                file_type: directory
+        - name: Source scl_source
+          command: source scl_source enable devtoolset-7
+        - name: Compile the kernel
+          make:
+               chdir: /root/linux*(need to complete this)
+               name: "{{ items }}"
+          with_items:
+                - defconfig
+                - module_install
+                - install
+        - name: Configure grub.conf file for boot up
+          command: sed -i "s/^default/default=0/" /boot/grub/grub.conf
+          when: ansible_distribution == "CentOS" or ansible_distribution =
+        - name: reboot server
+          reboot:
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Handler showing how to clean yum metadata cache
+# - name: yum-clean-metadata
+#   command: yum clean metadata
+#     args:
+#         warn: no

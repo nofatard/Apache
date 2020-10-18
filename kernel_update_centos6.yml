@@ -1,0 +1,94 @@
+---
+- hosts: web 
+  user: all
+  tasks:
+        - name: Add repositories
+          yum_repository: 
+                name: epel
+                description: EPEL YUM repo
+                baseurl: http://mirrors.sonic.net/epel/epel-release-latest-7.noarch.rpm
+               # ignore_errors: yes
+        - name: Download kernel and extract
+          unarchive:
+                src: https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.6.5.tar.xz
+                dest: /root
+                remote_src: yes
+#        - name: Get into package
+#          command: chdir /
+#        - name: Install dependencies
+#          yum: name=Development-Tools state=present
+#
+        - name: openssl*
+          yum: name=openssl* state=present
+#        - name: libncurses5-dev
+#          yum: name=libncurses5-dev state=present
+        - name: gcc*
+          yum: name=gcc* state=present
+        - name: ncurses-devel
+          yum: name=ncurses-devel state=present
+        - name: elfutils-libelf-devel
+          yum: name=elfutils-libelf-devel state=present
+        - name: centos-release-scl
+          yum: name=centos-release-scl state=present
+#        - name: devtoolset-7
+#          yum: name=devtoolset-7 state=present
+#        - name: devtoolset-7-gcc*
+#          yum: name=devtoolset-7-gcc* state=present
+        - name: flex
+          yum: name=flex state=present
+        - name: bison
+          yum: name=bison state=present
+#                - openssl*
+#                - libncurses5-dev
+#                - gcc*
+#                - ncurses-devel
+#                - elfutils-libelf-devel
+#                - centos-release-scl
+#                - devtoolset-7
+#                - devtoolset-7-gcc*
+#                - flex
+#                - bison
+        - name: finding location of file
+          find:
+                paths: /root/linux*
+                patterns: linux* 
+                age: 1h
+                file_type: directory
+        - name: Source scl_source
+          command: source scl_source enable devtoolset-7
+        - name: Compile the kernel-1
+          make: 
+                target: all
+                chdir: /root/
+#               name: "{{ items }}"
+#          with_items:
+#               - defconfig
+#               - module_install
+#               - install
+ 
+        - name: Configure grub.conf file for boot up
+          command: sed -i "s/^default/default=0/" /boot/grub/grub.conf
+          when: ansible_distribution == "CentOS"
+       # - name: reboot server
+       #   reboot: 
+       #         reboot_timeout: 3600
+       #
+       #
+  handlers:
+        - name: yum-clean-metadata
+          command: yum clean metadata
+#            args: 
+#                warn: no
+
+
+
+
+
+
+
+
+# Handler showing how to clean yum metadata cache
+# - name: yum-clean-metadata
+#   command: yum clean metadata
+#     args:
+#         warn: no
